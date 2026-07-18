@@ -31,6 +31,7 @@ A modern browser extension built for developers who want an organized coding por
   - Brute Force
   - Better
   - Optimal
+  - Custom
 - 📄 Individual problem README
 - 📈 Progress tracking
 - ⚡ Fast GitHub synchronization
@@ -70,26 +71,6 @@ assets/screenshots/
 
 ---
 
-# 📁 Repository Structure
-
-```
-Repository
-│
-├── LeetCode
-│   ├── Arrays
-│   ├── Strings
-│   ├── Trees
-│   └── ...
-│
-└── GeeksForGeeks
-    ├── Arrays
-    ├── Graphs
-    ├── DP
-    └── ...
-```
-
----
-
 # 📝 Generated Problem Structure
 
 ```
@@ -99,7 +80,6 @@ LeetCode/
     ├── BruteForce.java
     ├── Better.java
     ├── Optimal.java
-    └── NOTES.md
 ```
 
 ---
@@ -187,79 +167,9 @@ dist/firefox
 
 - Solution
 - README
-- NOTES (optional)
 - Updates platform README
 - Updates root README
 
----
-
-# 🏗 Architecture
-
-```
-UI
-│
-├── Popup
-├── Welcome
-└── Dashboard
-        │
-        ▼
-Services
-│
-├── Sync Service
-├── Platform Service
-└── Storage Service
-        │
-        ▼
-Models
-│
-├── Problem
-├── Solution
-├── Repository
-└── Statistics
-        │
-        ▼
-Parsers
-│
-├── LeetCode
-└── GeeksForGeeks
-        │
-        ▼
-Generators
-│
-├── Root README
-├── Platform README
-├── Question README
-└── Folder Generator
-        │
-        ▼
-GitHub
-│
-├── API
-├── OAuth
-├── Repository
-└── Uploader
-```
-
----
-
-# 📂 Project Structure
-
-```
-scripts/
-│
-├── github/
-├── generators/
-├── parsers/
-├── services/
-├── models/
-├── constants/
-├── utils/
-│
-├── popup.js
-├── welcome.js
-├── content.js
-└── background.js
-```
 
 ---
 
@@ -295,23 +205,6 @@ Lint
 npm run lint
 ```
 
----
-
-# 🛣 Roadmap
-
-- [x] LeetCode Support
-- [x] GeeksForGeeks Support
-- [x] Automatic GitHub Sync
-- [x] Multi-Solution Upload
-- [x] Automatic README Generation
-- [x] Modular Architecture
-- [x] Chrome Support
-- [x] Firefox Support
-- [ ] Chrome Web Store
-- [ ] Firefox Add-on Store
-- [ ] Codeforces Support
-- [ ] HackerRank Support
-- [ ] InterviewBit Support
 
 ---
 
