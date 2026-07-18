@@ -1,11 +1,17 @@
+import { checkElem, convertToSlug } from '../utils/helpers.js';
+import { languages } from '../models/Solution.js';
+import { addLeadingZeros, getDifficulty } from '../models/Problem.js';
+import { formatStats } from '../models/Statistics.js';
 import {
-  checkElem,
-  convertToSlug,
-  languages,
-  addLeadingZeros,
-  formatStats,
-  getDifficulty,
-} from './util.js';
+  extractTitle,
+  extractSlug,
+  extractDifficulty,
+  extractDescription,
+  extractLanguage,
+  extractCode,
+  parseStats as parseStatsHelper,
+} from '../parsers/leetcode/index.js';
+import { generateProblemReadme } from '../generators/questionReadmeGenerator.js';
 
 /*
  * V1 - old UI functionality
@@ -97,19 +103,7 @@ LeetCodeV1.prototype.findCode = function (commitMsg) {
 };
 /** @returns {languages} */
 LeetCodeV1.prototype.getLanguageExtension = function () {
-  const tag = [
-    ...document.getElementsByClassName('ant-select-selection-selected-value'),
-    ...document.getElementsByClassName('Select-value-label'),
-  ];
-  if (tag && tag.length > 0) {
-    for (let i = 0; i < tag.length; i += 1) {
-      const elem = tag[i].textContent;
-      if (elem !== undefined && languages[elem] !== undefined) {
-        return languages[elem];
-      }
-    }
-  }
-  return null;
+  return extractLanguage(document);
 };
 /* function to get the notes if there is any
    the note should be opened atleast once for this to work
@@ -142,21 +136,7 @@ LeetCodeV1.prototype.getNotesIfAny = function () {
 };
 // Returns a slugged num+title variation e.g. 0001-two-sum
 LeetCodeV1.prototype.getProblemNameSlug = function () {
-  const questionElem = document.getElementsByClassName('content__u3I1 question-content__JfgR');
-  const questionDescriptionElem = document.getElementsByClassName('question-description__3U1T');
-  let questionTitle = 'unknown-problem';
-  if (checkElem(questionElem)) {
-    let qtitle = document.getElementsByClassName('css-v3d350');
-    if (checkElem(qtitle)) {
-      questionTitle = qtitle[0].innerHTML;
-    }
-  } else if (checkElem(questionDescriptionElem)) {
-    let qtitle = document.getElementsByClassName('question-title');
-    if (checkElem(qtitle)) {
-      questionTitle = qtitle[0].innerText;
-    }
-  }
-  return addLeadingZeros(convertToSlug(questionTitle));
+  return extractSlug(document);
 };
 /* Gets the success state of the solution and updates html elements with new classes */
 LeetCodeV1.prototype.getSuccessStateAndUpdate = function () {
@@ -187,16 +167,7 @@ LeetCodeV1.prototype.getSuccessStateAndUpdate = function () {
 };
 /* Parser function for time/space stats */
 LeetCodeV1.prototype.parseStats = function () {
-  const probStats = document.getElementsByClassName('data__HC-i');
-  if (!checkElem(probStats)) {
-    return null;
-  }
-  const time = probStats[0].textContent;
-  const timePercentile = probStats[1].textContent;
-  const space = probStats[2].textContent;
-  const spacePercentile = probStats[3].textContent;
-
-  return `Time: ${time} (${timePercentile}), Space: ${space} (${spacePercentile}) - AlgoSync`;
+  return parseStatsHelper(document);
 };
 /* Parser function for the question, question title, question difficulty, and tags */
 LeetCodeV1.prototype.parseQuestion = function () {
@@ -207,57 +178,28 @@ LeetCodeV1.prototype.parseQuestion = function () {
   const questionElem = document.getElementsByClassName('content__u3I1 question-content__JfgR');
   const questionDescriptionElem = document.getElementsByClassName('question-description__3U1T');
   if (checkElem(questionElem)) {
-    const qbody = questionElem[0].innerHTML;
-
-    // Problem title.
-    let qtitle = document.getElementsByClassName('css-v3d350');
-    if (checkElem(qtitle)) {
-      qtitle = qtitle[0].innerHTML;
-    } else {
-      qtitle = 'unknown-problem';
-    }
-
-    // Problem difficulty, each problem difficulty has its own class.
-    const isHard = document.getElementsByClassName('css-t42afm');
-    const isMedium = document.getElementsByClassName('css-dcmtd5');
-    const isEasy = document.getElementsByClassName('css-14oi08n');
-
-    if (checkElem(isEasy)) {
-      this.difficulty = getDifficulty('easy');
-    } else if (checkElem(isMedium)) {
-      this.difficulty = getDifficulty('medium');
-    } else if (checkElem(isHard)) {
-      this.difficulty = getDifficulty('hard');
-    } else {
-      this.difficulty = getDifficulty(null);
-    }
-    // Final formatting of the contents of the README for each problem
-    const markdown = `<h2><a href="${questionUrl}">${qtitle}</a></h2><h3>${difficulty}</h3><hr>${qbody}`;
-    return markdown;
+    const qbody = extractDescription(document);
+    const qtitle = extractTitle(document);
+    this.difficulty = extractDifficulty(document);
+    return generateProblemReadme({
+      platform: 'leetcode',
+      title: qtitle,
+      difficulty: this.difficulty,
+      body: qbody,
+      url: questionUrl,
+    });
   } else if (checkElem(questionDescriptionElem)) {
-    let questionTitle = document.getElementsByClassName('question-title');
-    if (checkElem(questionTitle)) {
-      questionTitle = questionTitle[0].innerText;
-    } else {
-      questionTitle = 'unknown-problem';
-    }
-
-    const questionBody = questionDescriptionElem[0].innerHTML;
-    const markdown = `<h2>${questionTitle}</h2><hr>${questionBody}`;
-
-    return markdown;
+    const questionTitle = extractTitle(document);
+    const questionBody = extractDescription(document);
+    return generateProblemReadme({
+      platform: 'leetcode',
+      title: questionTitle,
+      body: questionBody,
+    });
   }
 };
 LeetCodeV1.prototype.parseQuestionTitle = function () {
-  let qtitle = document.getElementsByClassName('css-v3d350');
-  if (checkElem(qtitle)) {
-    return qtitle[0].innerText.trim();
-  }
-  let questionTitle = document.getElementsByClassName('question-title');
-  if (checkElem(questionTitle)) {
-    return questionTitle[0].innerText.trim();
-  }
-  return 'Unknown Problem';
+  return extractTitle(document);
 };
 /* Injects a spinner on left side to the "Run Code" button */
 LeetCodeV1.prototype.startSpinner = function () {
@@ -389,21 +331,12 @@ LeetCodeV2.prototype.findCode = function () {
   return code;
 };
 LeetCodeV2.prototype.getCode = function () {
-  if (this.submissionData != null) {
-    return this.submissionData.code;
-  }
-
-  const code = document.getElementsByTagName('code');
-  if (!checkElem(code)) {
-    return null;
-  }
-
-  return code[0].innerText;
+  return extractCode(document, this.submissionData);
 };
 /** @returns {languages} */
 LeetCodeV2.prototype.getLanguageExtension = function () {
   if (this.submissionData != null) {
-    return languages[this.submissionData.lang.verboseName];
+    return extractLanguage(document, this.submissionData);
   }
 
   const tag = document.querySelector('button[id^="headlessui-listbox-button"]');
@@ -420,10 +353,7 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
 };
 LeetCodeV2.prototype.getNotesIfAny = function () {};
 LeetCodeV2.prototype.getProblemNameSlug = function () {
-  const slugTitle = this.submissionData.question.titleSlug;
-  const qNum = this.submissionData.question.questionFrontendId;
-
-  return addLeadingZeros(qNum + '-' + slugTitle);
+  return extractSlug(document, this.submissionData);
 };
 LeetCodeV2.prototype.getSuccessStateAndUpdate = function () {
   const successTag = document.querySelectorAll('[data-e2e-locator="submission-result"]');
@@ -435,30 +365,7 @@ LeetCodeV2.prototype.getSuccessStateAndUpdate = function () {
   return false;
 };
 LeetCodeV2.prototype.parseStats = function () {
-  if (this.submissionData != null) {
-    const runtimePercentile =
-      Math.round((this.submissionData.runtimePercentile + Number.EPSILON) * 100) / 100;
-    const spacePercentile =
-      Math.round((this.submissionData.memoryPercentile + Number.EPSILON) * 100) / 100;
-    return formatStats(
-      this.submissionData.runtimeDisplay,
-      runtimePercentile,
-      this.submissionData.memoryDisplay,
-      spacePercentile
-    );
-  }
-
-  const probStats = document.getElementsByClassName('flex w-full pb-4')[0].innerText.split('\n');
-  if (!checkElem(probStats)) {
-    return null;
-  }
-
-  const time = probStats[1];
-  const timePercentile = probStats[3];
-  const space = probStats[5];
-  const spacePercentile = probStats[7];
-
-  return formatStats(time, timePercentile, space, spacePercentile);
+  return parseStatsHelper(document, this.submissionData);
 };
 LeetCodeV2.prototype.parseQuestion = function () {
   let markdown;
@@ -467,10 +374,16 @@ LeetCodeV2.prototype.parseQuestion = function () {
     const qTitle = `${this.submissionData.question.questionId}. ${this.submissionData.question.title}`;
     const qBody = this.parseQuestionDescription();
 
-    this.difficulty = getDifficulty(this.submissionData.question.difficulty);
+    this.difficulty = this.parseDifficulty();
 
     // Final formatting of the contents of the README for each problem
-    markdown = `<h2><a href="${questionUrl}">${qTitle}</a></h2><h3>${this.difficulty}</h3><hr>${qBody}`;
+    markdown = generateProblemReadme({
+      platform: 'leetcode',
+      title: qTitle,
+      difficulty: this.difficulty,
+      body: qBody,
+      url: questionUrl,
+    });
   } else {
     // TODO: get the README markdown via scraping. Right now this isn't possible.
     markdown = null;
@@ -479,44 +392,13 @@ LeetCodeV2.prototype.parseQuestion = function () {
   return markdown;
 };
 LeetCodeV2.prototype.parseQuestionTitle = function () {
-  if (this.submissionData != null) {
-    return this.submissionData.question.title;
-  }
-
-  let questionTitle = document
-    .getElementsByTagName('title')[0]
-    .innerText.split(' ')
-    .slice(0, -2)
-    .join(' ');
-
-  if (questionTitle === '') {
-    questionTitle = 'unknown-problem';
-  }
-
-  return questionTitle;
+  return extractTitle(document, this.submissionData);
 };
 LeetCodeV2.prototype.parseQuestionDescription = function () {
-  if (this.submissionData != null) {
-    return this.submissionData.question.content;
-  }
-
-  const description = document.getElementsByName('description');
-  if (!checkElem(description)) {
-    return null;
-  }
-  return description[0].content;
+  return extractDescription(document, this.submissionData);
 };
 LeetCodeV2.prototype.parseDifficulty = function () {
-  if (this.submissionData != null) {
-    return getDifficulty(this.submissionData.question.difficulty);
-  }
-
-  const diffElement = document.getElementsByClassName('mt-3 flex space-x-4');
-  if (checkElem(diffElement)) {
-    return diffElement[0].children[0].innerText;
-  }
-  // Else, we're not on the description page. Nothing we can do.
-  return 'unknown';
+  return extractDifficulty(document, this.submissionData);
 };
 LeetCodeV2.prototype.startSpinner = function () {
   let elem = document.getElementById('leethub_progress_anchor_element');

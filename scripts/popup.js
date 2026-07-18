@@ -3,28 +3,15 @@
  * Modern vanilla JS implementation - no jQuery, no Semantic UI
  */
 
-import { getBrowser, getGitHubRepoUrl, normalizeGitHubRepoName } from './core/util.js';
+import { getBrowser } from './utils/helpers.js';
+import { getGitHubRepoUrl, normalizeGitHubRepoName, uploadRootReadme } from './models/Repository.js';
+import { STORAGE_KEYS } from './constants/storage.js';
+import { GitHubAPI } from './github/repository.js';
+import { storageService as Storage } from './services/storageService.js';
 
 // ============================================================================
 // CONSTANTS & CONFIG
 // ============================================================================
-
-const STORAGE_KEYS = {
-  THEME: 'algosync-theme',
-  TOKEN: 'leethub_token',
-  USERNAME: 'leethub_username',
-  MODE_TYPE: 'mode_type',
-  REPO_HOOK: 'leethub_hook',
-  REPO_URL: 'repo',
-  STATS: 'stats',
-  SYNC_STATS: 'sync_stats',
-  SOLUTION_MODE: 'solution_upload_mode',
-  DEFAULT_SOLUTION_MODE: 'overwrite'
-};
-
-const AUTHENTICATION_URL = 'https://api.github.com/user';
-const CREATE_REPO_URL = 'https://api.github.com/user/repos';
-const REPO_URL_BASE = 'https://api.github.com/repos/';
 
 const THEMES = ['system', 'light', 'dark'];
 const DEFAULT_THEME = 'system';
@@ -214,83 +201,14 @@ const StatsAnimation = {
 };
 
 // ============================================================================
-// STORAGE HELPERS
+// STORAGE HELPERS (Delegated to StorageService)
 // ============================================================================
-
-const Storage = {
-  api: getBrowser(),
-
-  async get(keys) {
-    return new Promise((resolve) => {
-      this.api.storage.local.get(keys, resolve);
-    });
-  },
-
-  async set(data) {
-    return new Promise((resolve) => {
-      this.api.storage.local.set(data, resolve);
-    });
-  },
-
-  async remove(keys) {
-    return new Promise((resolve) => {
-      this.api.storage.local.remove(keys, resolve);
-    });
-  }
-};
 
 // ============================================================================
 // GITHUB API HELPERS
 // ============================================================================
 
-const GitHubAPI = {
-  async validateToken(token) {
-    try {
-      const response = await fetch(AUTHENTICATION_URL, {
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json'
-        }
-      });
-      return response.ok ? await response.json() : null;
-    } catch {
-      return null;
-    }
-  },
 
-  async createRepo(token, name) {
-    const response = await fetch(CREATE_REPO_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name,
-        private: true,
-        auto_init: true,
-        description: 'A collection of LeetCode questions to ace the coding interview! - Created using [AlgoSync](https://github.com/arunbhardwaj/LeetHub-2.0)'
-      })
-    });
-
-    const data = await response.json();
-    return { ok: response.ok, status: response.status, data };
-  },
-
-  async linkRepo(token, repoName) {
-    const normalized = normalizeGitHubRepoName(repoName);
-    const response = await fetch(`${REPO_URL_BASE}${normalized}`, {
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: 'application/vnd.github.v3+json'
-      }
-    });
-
-    const data = await response.json();
-    return { ok: response.ok, status: response.status, data, normalized };
-  }
-};
 
 // ============================================================================
 // UI STATE MANAGEMENT
@@ -512,6 +430,11 @@ const HookMode = {
 
   async createRepo(token, name) {
     const result = await GitHubAPI.createRepo(token, name);
+    if (result.ok && result.data?.full_name) {
+      uploadRootReadme(token, result.data.full_name).catch(err => {
+        console.warn('[AlgoSync] Root README upload during repo creation failed:', err);
+      });
+    }
 
     if (!result.ok) {
       const errorMessages = {

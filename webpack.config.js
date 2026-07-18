@@ -25,14 +25,20 @@ const ignore = [
   '**/assets/extension', // web store assets
   // webpack compiled files and source modules
   '**/scripts/content.js',
-  '**/scripts/core/**',
+  '**/scripts/background.js',
+  '**/scripts/models/**',
+  '**/scripts/services/**',
+  '**/scripts/utils/**',
+  '**/scripts/constants/**',
+  '**/scripts/parsers/**',
+  '**/scripts/generators/**',
   '**/scripts/platforms/**',
   '**/scripts/leetcode/**',
-  '**/scripts/gfg.js',
+  '**/scripts/github/api.js',
+  '**/scripts/github/repository.js',
+  '**/scripts/github/uploader.js',
   '**/scripts/welcome.js',
   '**/scripts/popup.js',
-  '**/scripts/jquery-3.3.1.min.js',
-  '**/scripts/semantic-2.4.1.min.js',
   '**/manifest-chrome.json',
   '**/manifest-firefox.json',
   '**/src/**',
@@ -61,6 +67,7 @@ const manifestTransform = content => {
 export default {
   entry: {
     content: path.resolve(__dirname, 'scripts', 'content.js'),
+    background: path.resolve(__dirname, 'scripts', 'background.js'),
     welcome: './scripts/welcome.js',
     popup: './src/popup/index.jsx',
   },
@@ -158,6 +165,10 @@ export default {
             {
               source: './dist/content.js',
               destination: './dist/scripts/content.js',
+            },
+            {
+              source: './dist/background.js',
+              destination: './dist/scripts/background.js',
             },
             {
               source: './dist/welcome.js',

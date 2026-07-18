@@ -1,4 +1,4 @@
-import { getBrowser } from "./util.js";
+import { getBrowser } from "../utils/helpers.js";
 
 let api = getBrowser()
 

@@ -1,3 +1,5 @@
+import { storageService } from './services/storageService.js';
+
 let api = isChrome() ? chrome : isFirefox() ? browser : undefined;
 
 // const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -5,7 +7,7 @@ let api = isChrome() ? chrome : isFirefox() ? browser : undefined;
 api.runtime.onInstalled.addListener(details => {
   if (details.reason === 'install') {
     // Allow persistent stats to sync on repo link
-    api.storage.local.set({ sync_stats: true, solution_upload_mode: 'overwrite' });
+    storageService.set({ sync_stats: true, solution_upload_mode: 'overwrite' });
   }
 });
 
@@ -14,13 +16,13 @@ api.runtime.onMessage.addListener(handleMessage);
 function handleMessage(request, sender, sendResponse) {
   if (request && request.closeWebPage === true && request.isSuccess === true) {
     /* Set username */
-    api.storage.local.set({ leethub_username: request.username });
+    storageService.set({ leethub_username: request.username });
 
     /* Set token */
-    api.storage.local.set({ leethub_token: request.token });
+    storageService.set({ leethub_token: request.token });
 
     /* Close pipe */
-    api.storage.local.set({ pipe_leethub: false }, () => {
+    storageService.set({ pipe_leethub: false }, () => {
       console.log('Closed pipe.');
     });
 

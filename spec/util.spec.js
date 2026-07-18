@@ -1,4 +1,5 @@
-import { mergeStats, normalizeGitHubRepoName } from '../scripts/leetcode/util.js';
+import { mergeStats } from '../scripts/models/Statistics.js';
+import { normalizeGitHubRepoName } from '../scripts/models/Repository.js';
 
 describe('normalizeGitHubRepoName', () => {
   it('should keep owner and repo input unchanged', () => {

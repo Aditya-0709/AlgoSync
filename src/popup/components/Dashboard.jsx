@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from './ui/Card.jsx';
 import { Button } from './ui/Button.jsx';
 import { Badge } from './ui/Badge.jsx';
 import { useStorage, setStorageMultiple } from '../hooks/useStorage.js';
+import { uploadRootReadme } from '../../../scripts/models/Repository.js';
 import { Github, FolderGit2, RefreshCw, CheckCircle2, AlertCircle, ExternalLink, Unlink, PlusCircle } from 'lucide-react';
 
 export function Dashboard({ onNavigateTab }) {
@@ -110,6 +111,9 @@ export function Dashboard({ onNavigateTab }) {
           mode_type: 'commit',
           leethub_hook: data.full_name,
           repo: data.html_url,
+        });
+        uploadRootReadme(token, data.full_name).catch(err => {
+          console.warn('[AlgoSync] Root README upload during popup repo creation failed:', err);
         });
       } else {
         const fullRepo = cleanName.includes('/') ? cleanName : `${username}/${cleanName}`;

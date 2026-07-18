@@ -7,7 +7,7 @@ export class CodingPlatform {
    * @param {Object} config
    * @param {string} config.id - unique identifier e.g. 'leetcode'
    * @param {string} config.name - display name e.g. 'LeetCode'
-   * @param {string} config.folder - storage folder name under DSA/ e.g. 'LeetCode'
+   * @param {string} config.folder - storage folder name e.g. 'LeetCode'
    * @param {string[]} config.hostnames - supported hostnames/domains
    */
   constructor({ id, name, folder, hostnames = [] }) {

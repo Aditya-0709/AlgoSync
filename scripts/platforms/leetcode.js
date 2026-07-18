@@ -1,27 +1,16 @@
 import { CodingPlatform } from './base.js';
-import {
-  decode,
-  encode,
-  getGitHubFile,
-  getSolutionFilename,
-  getSolutionUploadMode,
-  incrementStats,
-  MULTI_SOLUTION_MODE,
-  upload,
-  uploadGitWith409Retry,
-  WAIT_FOR_GITHUB_API_TO_NOT_THROW_409_MS,
-} from '../core/uploader.js';
-import {
-  debounce,
-  delay,
-  getBrowser,
-  getPlatformProblemDirectory,
-  LeetHubError,
-  normalizeGitHubRepoName,
-} from '../core/util.js';
+import { decode, encode } from '../github/api.js';
+import { getGitHubFile } from '../github/repository.js';
+import { upload, uploadGitWith409Retry, WAIT_FOR_GITHUB_API_TO_NOT_THROW_409_MS } from '../github/uploader.js';
+import { getSolutionFilename, getSolutionUploadMode, MULTI_SOLUTION_MODE } from '../models/Solution.js';
+import { incrementStats } from '../models/Statistics.js';
+import { normalizeGitHubRepoName } from '../models/Repository.js';
+import { debounce, delay, getBrowser, getPlatformProblemDirectory, LeetHubError } from '../utils/helpers.js';
 import { LeetCodeV1, LeetCodeV2 } from '../leetcode/versions.js';
 import setupManualSubmitBtn from '../leetcode/submitBtn.js';
 import { appendProblemToReadme, sortTopicsInReadme, updatePlatformAndRootReadme } from '../leetcode/readmeTopics.js';
+import { storageService } from '../services/storageService.js';
+import { syncService } from '../services/syncService.js';
 
 const readmeMsg = 'Create README - AlgoSync';
 const updateReadmeMsg = 'Update README - Topic Tags';
@@ -32,8 +21,6 @@ const defaultRepoReadme =
   'A collection of LeetCode questions to ace the coding interview! - Created using [AlgoSync](https://github.com/arunbhardwaj/LeetHub-2.0)';
 const readmeFilename = 'README.md';
 const statsFilename = 'stats.json';
-
-const api = getBrowser();
 
 export class LeetCodePlatform extends CodingPlatform {
   constructor() {
@@ -47,7 +34,7 @@ export class LeetCodePlatform extends CodingPlatform {
 
   init() {
     /* Sync to local storage */
-    api.storage.local.get('isSync', data => {
+    storageService.get(['isSync']).then(data => {
       const keys = [
         'leethub_token',
         'leethub_username',
@@ -59,13 +46,13 @@ export class LeetCodePlatform extends CodingPlatform {
       ];
       if (!data || !data.isSync) {
         keys.forEach(key => {
-          api.storage.sync.get(key, syncData => {
+          storageService.getSync([key]).then(syncData => {
             if (syncData && syncData[key] !== undefined) {
-              api.storage.local.set({ [key]: syncData[key] });
+              storageService.set({ [key]: syncData[key] });
             }
           });
         });
-        api.storage.local.set({ isSync: true }, () => {
+        storageService.set({ isSync: true }, () => {
           console.log('AlgoSync Synced to local values');
         });
       } else {
@@ -165,75 +152,30 @@ export class LeetCodePlatform extends CodingPlatform {
         if (!language) {
           throw new LeetHubError('LanguageNotFound');
         }
-        const solutionUploadMode = await getSolutionUploadMode();
-
-        let filename = await getSolutionFilename(
+        const result = await syncService.syncSubmission({
+          problemStatement: probStatement,
+          problemSlug: problemName,
+          problemName: problemName,
           fullProblemDirectory,
           language,
-          solutionUploadMode
-        );
-        if (!filename) {
+          code: leetCode.findCode(probStats),
+          notes: leetCode.getNotesIfAny(),
+          topicTags: leetCode.submissionData?.question?.topicTags,
+          problemTitle: typeof leetCode.parseQuestionTitle === 'function' ? leetCode.parseQuestionTitle() : problemName,
+          difficulty: leetCode.difficulty,
+          platformFolder: this.folder,
+          platformName: this.name,
+          readmeMsg,
+          codeMsg: readmeMsg,
+          createNotesMsg,
+        });
+
+        if (!result) {
           leetCode.markUploadFailed();
           return;
         }
 
-        /* Upload README */
-        const uploadReadMe = await api.storage.local.get('stats').then(({ stats }) => {
-          const shaExists = stats?.shas?.[fullProblemDirectory]?.[readmeFilename] !== undefined;
-          if (!shaExists) {
-            return uploadGitWith409Retry(
-              encode(probStatement),
-              problemName,
-              readmeFilename,
-              readmeMsg,
-              undefined,
-              this.folder
-            );
-          }
-        });
-
-        /* Upload Notes if any */
-        const notes = leetCode.getNotesIfAny();
-        let uploadNotes;
-        if (notes != undefined && notes.length > 0) {
-          uploadNotes = uploadGitWith409Retry(
-            encode(notes),
-            problemName,
-            'NOTES.md',
-            createNotesMsg,
-            undefined,
-            this.folder
-          );
-        }
-
-        /* Upload code */
-        const code = leetCode.findCode(probStats);
-        const uploadCode = uploadGitWith409Retry(
-          encode(code),
-          problemName,
-          filename,
-          readmeMsg,
-          {
-            neverOverwrite: solutionUploadMode === MULTI_SOLUTION_MODE,
-          },
-          this.folder
-        );
-
-        /* Group problem into topics in platform repo README and update Root README */
-        const updateRepoReadMe = updatePlatformAndRootReadme(
-          leetCode.submissionData?.question?.topicTags,
-          fullProblemDirectory,
-          problemName,
-          typeof leetCode.parseQuestionTitle === 'function' ? leetCode.parseQuestionTitle() : problemName,
-          this.folder,
-          this.name
-        );
-
-        await Promise.all([uploadReadMe, uploadNotes, uploadCode, updateRepoReadMe]);
-
         leetCode.markUploaded();
-
-        incrementStats(leetCode.difficulty, fullProblemDirectory);
       } catch (err) {
         leetCode.markUploadFailed();
         clearInterval(intervalId);
