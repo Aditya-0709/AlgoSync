@@ -14,6 +14,7 @@ import {
   languages,
 } from '../core/util.js';
 import { updatePlatformAndRootReadme } from '../leetcode/readmeTopics.js';
+import { formatGfgProblemReadme } from './gfgReadme.js';
 
 const README_MSG = 'Create README - AlgoSync';
 const SUBMIT_MSG = 'Added solution - AlgoSync';
@@ -197,7 +198,7 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
     return 'Medium';
   }
 
-  findTopicTags() {
+  async findTopicTags() {
     try {
       const tags = [];
       const addTag = (text, el = null) => {
@@ -234,37 +235,175 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
         }
       };
 
-      // 1. First priority: Heading / Accordion specifically named "Topic Tags" or "Topics"
-      const allHeadings = document.querySelectorAll('h2, h3, h4, h5, div, span, button, p');
-      for (let h of allHeadings) {
-        const txt = h.innerText?.trim()?.toLowerCase() || '';
-        if (
-          (txt.startsWith('topic tag') || txt.startsWith('topics') || txt === 'topic tags' || txt.includes('topic tags')) &&
-          !txt.includes('company') &&
-          !txt.includes('related') &&
-          !txt.includes('article') &&
-          !txt.includes('similar')
-        ) {
-          const containers = [
-            h.nextElementSibling,
-            h.parentElement?.nextElementSibling,
-            h.parentElement,
-            h.closest('[class*="accordion"]')
-          ];
-          for (const container of containers) {
-            if (container) {
-              const items = container.querySelectorAll('a, span, div[class*="chip"], button, li');
-              items.forEach(item => {
-                if (item !== h && !h.contains(item)) {
-                  addTag(item.innerText, item);
+      // 0. HIGHEST PRIORITY: Extract tags from __NEXT_DATA__ JSON embedded in the page.
+      //    GFG stores topic_tags at known paths inside the Next.js page data.
+      //    This is the most reliable source — no DOM manipulation needed.
+      try {
+        const nextDataEl = document.getElementById('__NEXT_DATA__');
+        if (nextDataEl) {
+          const nextText = nextDataEl.textContent || nextDataEl.innerText || '';
+          if (nextText) {
+            const nextData = JSON.parse(nextText);
+            const pageProps = nextData?.props?.pageProps;
+
+            // Known paths where GFG stores topic_tags:
+            // 1. pageProps.initialState.problemData.allData.probData.tags.topic_tags
+            // 2. pageProps.initialState.problemApi.queries.<key>.data.tags.topic_tags
+            let topicTags = null;
+
+            // Path 1: Direct access
+            topicTags = pageProps?.initialState?.problemData?.allData?.probData?.tags?.topic_tags;
+
+            // Path 2: Search through problemApi queries
+            if (!topicTags || topicTags.length === 0) {
+              const queries = pageProps?.initialState?.problemApi?.queries;
+              if (queries && typeof queries === 'object') {
+                for (const [, queryVal] of Object.entries(queries)) {
+                  const qt = queryVal?.data?.tags?.topic_tags;
+                  if (qt && Array.isArray(qt) && qt.length > 0) {
+                    topicTags = qt;
+                    break;
+                  }
                 }
-              });
+              }
+            }
+
+            // Path 3: Deep search for any "topic_tags" key
+            if (!topicTags || topicTags.length === 0) {
+              const deepSearch = (obj, depth = 0) => {
+                if (depth > 8 || !obj || topicTags) return;
+                if (Array.isArray(obj)) {
+                  for (const item of obj) deepSearch(item, depth + 1);
+                } else if (typeof obj === 'object') {
+                  for (const [k, v] of Object.entries(obj)) {
+                    if (k === 'topic_tags' && Array.isArray(v) && v.length > 0) {
+                      topicTags = v;
+                      return;
+                    }
+                    // Also check for "topicTags" (camelCase)
+                    if (k === 'topicTags' && Array.isArray(v) && v.length > 0) {
+                      topicTags = v;
+                      return;
+                    }
+                    // Skip company/irrelevant keys to save time
+                    const lk = k.toLowerCase();
+                    if (!['companytags', 'company_tags', 'companies', 'relatedarticles', 'similarproblems', 'articles'].includes(lk)) {
+                      deepSearch(v, depth + 1);
+                    }
+                  }
+                }
+              };
+              deepSearch(pageProps);
+            }
+
+            if (topicTags && Array.isArray(topicTags) && topicTags.length > 0) {
+              for (const tag of topicTags) {
+                if (typeof tag === 'string') addTag(tag);
+                else if (tag && typeof tag === 'object' && tag.name) addTag(tag.name);
+                else if (tag && typeof tag === 'object' && tag.tag) addTag(tag.tag);
+              }
+              console.log('[AlgoSync] findTopicTags from __NEXT_DATA__:', tags);
+              if (tags.length > 0) return tags;
+            }
+          }
+        }
+      } catch (_nextDataErr) {
+        console.log('[AlgoSync] __NEXT_DATA__ extraction failed:', _nextDataErr);
+      }
+
+      // 1. Expand the Topic Tags dropdown on GFG if it's collapsed.
+      try {
+        const allStrongs = document.querySelectorAll('strong, b, span, div, p, h3, h4, h5');
+        for (const el of allStrongs) {
+          const txt = (el.innerText || el.textContent || '').trim().toLowerCase();
+          if (txt === 'topic tags' || txt === 'topic tag') {
+            const parent = el.parentElement;
+            if (parent) {
+              const dropdownBtn = parent.querySelector('button[class*="tag_dropdown"], button[class*="dropdown"]') ||
+                                  parent.querySelector('button');
+              if (dropdownBtn) {
+                const existingTags = parent.querySelectorAll('a[class*="tag_label"], a[href*="/explore?category"]');
+                if (existingTags.length === 0) {
+                  dropdownBtn.click();
+                  await new Promise(r => setTimeout(r, 300));
+                }
+              }
+            }
+            break;
+          }
+        }
+      } catch (_expandErr) {
+        console.log('[AlgoSync] Topic Tags dropdown expand attempt failed:', _expandErr);
+      }
+
+      // 2. GFG-specific tag selectors
+      const gfgSpecificSelectors = [
+        'a[class*="problems_tag_label"]',
+        'a[class*="tag_label"][href*="/explore?category"]',
+        'a[href*="/explore?category[]="]',
+        'a[href*="/explore?category%5B%5D="]',
+      ];
+      for (const sel of gfgSpecificSelectors) {
+        document.querySelectorAll(sel).forEach(el => {
+          let isCompany = false;
+          let cur = el;
+          let hops = 0;
+          while (cur && cur !== document.body && hops < 8) {
+            const prevSibling = cur.previousElementSibling;
+            if (prevSibling) {
+              const prevText = (prevSibling.innerText || prevSibling.textContent || '').trim().toLowerCase();
+              if (prevText.includes('company')) {
+                isCompany = true;
+                break;
+              }
+            }
+            const parentText = cur.parentElement?.querySelector('strong, b')?.innerText?.trim()?.toLowerCase() || '';
+            if (parentText.includes('company')) {
+              isCompany = true;
+              break;
+            }
+            cur = cur.parentElement;
+            hops++;
+          }
+          if (!isCompany) {
+            addTag(el.innerText, el);
+          }
+        });
+      }
+
+      // 3. Heading / Accordion specifically named "Topic Tags" or "Topics"
+      if (tags.length === 0) {
+        const allHeadings = document.querySelectorAll('h2, h3, h4, h5, div, span, button, p, strong');
+        for (let h of allHeadings) {
+          const txt = h.innerText?.trim()?.toLowerCase() || '';
+          if (
+            (txt.startsWith('topic tag') || txt.startsWith('topics') || txt === 'topic tags' || txt.includes('topic tags')) &&
+            !txt.includes('company') &&
+            !txt.includes('related') &&
+            !txt.includes('article') &&
+            !txt.includes('similar')
+          ) {
+            const containers = [
+              h.nextElementSibling,
+              h.parentElement?.nextElementSibling,
+              h.parentElement,
+              h.closest('[class*="accordion"]')
+            ];
+            for (const container of containers) {
+              if (container) {
+                const items = container.querySelectorAll('a, span, div[class*="chip"], button, li');
+                items.forEach(item => {
+                  if (item !== h && !h.contains(item)) {
+                    addTag(item.innerText, item);
+                  }
+                });
+              }
             }
           }
         }
       }
 
-      // 2. Second priority: Explicit topic tag classes (with topicTag / topicTags / topic-tags in className)
+      // 4. Explicit topic tag classes
       if (tags.length === 0) {
         const explicitTopicSelectors = [
           '[class*="topicTags"] a, [class*="topicTags"] span, [class*="topicTags"] div[class*="chip"]',
@@ -279,7 +418,7 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
         }
       }
 
-      // 3. Third priority: Generic tag containers & links (with strict exclusion of company/related/similar via addTag checks)
+      // 5. Generic tag containers
       if (tags.length === 0) {
         const genericSelectors = [
           '[class*="tag_container"] a, [class*="tag_container"] span, [class*="tag_container"] div[class*="chip"]',
@@ -302,37 +441,11 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
         }
       }
 
-      // 4. Fallback: Check __NEXT_DATA__ if available (strictly targeting topicTags / topics)
-      if (tags.length === 0) {
-        const nextDataEl = document.getElementById('__NEXT_DATA__');
-        if (nextDataEl && nextDataEl.innerText) {
-          try {
-            const nextData = JSON.parse(nextDataEl.innerText);
-            const searchObjForTags = (obj, depth = 0) => {
-              if (depth > 6 || !obj || tags.length > 0) return;
-              if (Array.isArray(obj)) {
-                for (const item of obj) searchObjForTags(item, depth + 1);
-              } else if (typeof obj === 'object') {
-                for (const [k, v] of Object.entries(obj)) {
-                  if (['topictags', 'topics', 'problemtags'].includes(k.toLowerCase()) && Array.isArray(v)) {
-                    v.forEach(item => {
-                      if (typeof item === 'string') addTag(item);
-                      else if (item && typeof item === 'object' && item.name) addTag(item.name);
-                      else if (item && typeof item === 'object' && item.tag) addTag(item.tag);
-                    });
-                  } else if (!['companytags', 'company_tags', 'companies', 'relatedarticles', 'similarproblems', 'articles'].includes(k.toLowerCase())) {
-                    searchObjForTags(v, depth + 1);
-                  }
-                }
-              }
-            };
-            searchObjForTags(nextData);
-          } catch (_err) {}
-        }
-      }
-
+      console.log('[AlgoSync] findTopicTags result:', tags);
       if (tags.length > 0) return tags;
-    } catch (_e) {}
+    } catch (_e) {
+      console.error('[AlgoSync] findTopicTags error:', _e);
+    }
     return [{ name: 'General' }];
   }
 
@@ -418,7 +531,78 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
         }
       }
     } catch (_e) {}
-    return `# ${title}\n## ${difficulty}\n${content}`;
+
+    // Strip author / contributor metadata from the scraped content.
+    // GFG often embeds elements like "Vivek Kumar3 days agoJul 13, 2026 21:57 (GMT +5:30)"
+    // inside the problem content container. We remove those nodes so the README
+    // only contains the actual question.
+    if (content) {
+      try {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = content;
+
+        // 1. Remove elements whose class names indicate author / contributor / user info
+        const authorSelectors = [
+          '[class*="author"]',
+          '[class*="contributor"]',
+          '[class*="user-info"]',
+          '[class*="userInfo"]',
+          '[class*="user_info"]',
+          '[class*="profile"]',
+          '[class*="createdBy"]',
+          '[class*="created_by"]',
+          '[class*="author_info"]',
+          '[class*="authorInfo"]',
+          '[class*="problem_author"]',
+          '[class*="problemAuthor"]',
+          '[class*="submitted_by"]',
+          '[class*="submittedBy"]',
+          '[class*="posted_by"]',
+          '[class*="postedBy"]',
+          '[class*="avatar"]',
+          '[class*="ago"]',
+          '[class*="timestamp"]',
+          '[class*="meta_info"]',
+          '[class*="metaInfo"]',
+        ];
+        for (const sel of authorSelectors) {
+          wrapper.querySelectorAll(sel).forEach(el => el.remove());
+        }
+
+        // 2. Remove any element whose text matches common author/date patterns
+        //    e.g. "Vivek Kumar3 days agoJul 13, 2026 21:57 (GMT +5:30)"
+        const datePattern = /\d+\s*(days?|hours?|minutes?|mins?|seconds?|secs?|weeks?|months?|years?)\s*ago/i;
+        const gmtPattern = /\(GMT\s*[+\-]?\d+:\d+\)/i;
+        const walk = (node) => {
+          if (!node) return;
+          const children = Array.from(node.childNodes);
+          for (const child of children) {
+            if (child.nodeType === Node.ELEMENT_NODE) {
+              const text = (child.innerText || child.textContent || '').trim();
+              if (
+                (datePattern.test(text) || gmtPattern.test(text)) &&
+                text.length < 200 // only short metadata snippets, not real content
+              ) {
+                child.remove();
+              } else {
+                walk(child);
+              }
+            }
+          }
+        };
+        walk(wrapper);
+
+        // Use text rather than the scraped HTML. GFG commonly uses inline spans
+        // for the labels in its examples; GitHub consequently rendered the HTML
+        // as one long paragraph in the generated README.
+        content = (wrapper.innerText || wrapper.textContent || '').trim();
+      } catch (_cleanupErr) {
+        // If cleanup fails, use original content — still better than nothing
+      }
+    }
+
+    const questionUrl = window.location.href.split('?')[0];
+    return formatGfgProblemReadme(title, difficulty, content, questionUrl);
   }
 
   getCode() {
@@ -565,7 +749,7 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
     return false;
   }
 
-  startSubmissionMonitor(submitBtn) {
+  async startSubmissionMonitor(submitBtn) {
     let START_MONITOR = true;
     this.startSpinner(submitBtn);
 
@@ -574,7 +758,7 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
     const cachedTitle = this.findTitle();
     const cachedDifficulty = this.findDifficulty();
     const cachedProblemStatement = this.getProblemStatement(cachedTitle, cachedDifficulty);
-    const cachedTopicTags = this.findTopicTags();
+    const cachedTopicTags = await this.findTopicTags();
     const cachedLanguage = this.findGfgLanguage() || '.py';
     console.log('[AlgoSync] Cached at submit time — title:', cachedTitle, 'difficulty:', cachedDifficulty, 'tags:', cachedTopicTags, 'lang:', cachedLanguage);
 

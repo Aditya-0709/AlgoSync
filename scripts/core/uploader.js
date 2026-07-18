@@ -335,9 +335,13 @@ async function getNextMultiSolutionFilename(problemDirectory, extension) {
 
 function showSolutionTypePickerModal() {
   return new Promise(async resolve => {
-    const lastSelection =
-      (await api.storage.local.get(SOLUTION_TYPE_STORAGE_KEY))[SOLUTION_TYPE_STORAGE_KEY] ||
-      SOLUTION_TYPES.BRUTE_FORCE;
+    const storedSelection =
+      (await api.storage.local.get(SOLUTION_TYPE_STORAGE_KEY))[SOLUTION_TYPE_STORAGE_KEY];
+    // A stale or invalid saved setting must not leave the picker with no checked
+    // radio button, which previously caused a null.value error on Upload.
+    const lastSelection = Object.values(SOLUTION_TYPES).includes(storedSelection)
+      ? storedSelection
+      : SOLUTION_TYPES.BRUTE_FORCE;
 
     const modalOverlay = document.createElement('div');
     modalOverlay.id = 'leethub-solution-picker-overlay';
@@ -493,9 +497,10 @@ function showSolutionTypePickerModal() {
     });
 
     submitBtn.addEventListener('click', async () => {
-      const selectedType = modalContainer.querySelector(
+      const selectedRadio = modalContainer.querySelector(
         'input[name="leethub-solution-type"]:checked'
-      ).value;
+      );
+      const selectedType = selectedRadio?.value || SOLUTION_TYPES.BRUTE_FORCE;
       await api.storage.local.set({ [SOLUTION_TYPE_STORAGE_KEY]: selectedType });
 
       let customName = null;
