@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary font-sans antialiased select-none;
+    margin: 0;
+    padding: 0;
+    width: 380px;
+    min-height: 480px;
+    max-height: 580px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* Custom subtle scrollbar for developer tool aesthetic */
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-muted;
+  }
+}

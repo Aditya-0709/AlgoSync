@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AlgoSync - Welcome</title>
+    <link rel="stylesheet" href="css/design-system.css" />
+    <link rel="stylesheet" href="css/welcome.css" />
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('algosync-theme') || 'system';
+          if (theme === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="welcome-container">
+      <!-- Background decoration -->
+      <div class="bg-decoration" aria-hidden="true">
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+      </div>
+
+      <header class="welcome-header" role="banner">
+        <div class="header-content">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none" width="24" height="24">
+                <rect width="32" height="32" rx="8" fill="currentColor"/>
+                <path d="M8 12h16M8 16h12M8 20h8" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="header-brand-text">
+              <h1 class="header-brand-name">Algo<span class="header-brand-accent">Sync</span></h1>
+              <p class="header-brand-tagline">LeetCode Sync</p>
+            </div>
+          </div>
+          <button
+            class="header-theme-toggle"
+            id="theme-toggle"
+            aria-label="Toggle theme"
+            title="Toggle theme"
+            type="button"
+          >
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg class="icon-system" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8M12 17v4"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="welcome-main" role="main">
+        <div class="welcome-content">
+          <!-- Progress Stepper -->
+          <nav class="stepper welcome-stepper" aria-label="Setup progress" role="navigation">
+            <ol class="stepper-list" style="list-style: none; padding: 0; margin: 0;">
+              <li class="stepper-item stepper-step active" data-step="1" aria-current="step">
+                <div class="stepper-indicator">
+                  <span class="stepper-number stepper-circle" aria-hidden="true">1</span>
+                </div>
+                <div class="stepper-content">
+                  <h3 class="stepper-step-title stepper-label">Connect</h3>
+                </div>
+              </li>
+              <li class="stepper-item stepper-step" data-step="2">
+                <div class="stepper-indicator">
+                  <span class="stepper-number stepper-circle" aria-hidden="true">2</span>
+                </div>
+                <div class="stepper-content">
+                  <h3 class="stepper-step-title stepper-label">Repository</h3>
+                </div>
+              </li>
+              <li class="stepper-item stepper-step" data-step="3">
+                <div class="stepper-indicator">
+                  <span class="stepper-number stepper-circle" aria-hidden="true">3</span>
+                </div>
+                <div class="stepper-content">
+                  <h3 class="stepper-step-title stepper-label">Complete</h3>
+                </div>
+              </li>
+            </ol>
+          </nav>
+
+          <!-- Step 1: Authentication -->
+          <section class="welcome-step auth-step active" id="step-auth" data-step="1" aria-labelledby="auth-title">
+            <div class="auth-hero step-header">
+              <div class="auth-icon step-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <h1 id="auth-title" class="auth-title step-title">Connect Your GitHub</h1>
+              <p class="auth-subtitle step-description">
+                Grant AlgoSync access to your GitHub account to automatically sync your LeetCode solutions.
+              </p>
+            </div>
+
+            <div class="step-content">
+              <div class="auth-features auth-benefits" role="list" aria-label="Benefits of connecting GitHub">
+                <div class="feature-badge benefit" role="listitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span>Private Repositories</span>
+                </div>
+                <div class="feature-badge benefit" role="listitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span>Only Repo Scope</span>
+                </div>
+                <div class="feature-badge benefit" role="listitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                  <span>Instant Auto Sync</span>
+                </div>
+              </div>
+
+              <div class="auth-actions step-actions">
+                <button
+                  class="btn btn-primary btn-lg auth-primary-btn w-full"
+                  id="auth-btn"
+                  type="button"
+                >
+                  <svg class="icon-github" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20">
+                    <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  <span class="btn-text">Connect GitHub</span>
+                  <span class="btn-loading" hidden>
+                    <svg class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                      <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+                    </svg>
+                    <span>Redirecting...</span>
+                  </span>
+                </button>
+                <p class="auth-hint">Your code, your repository. We never access your personal data.</p>
+              </div>
+
+              <div class="alert alert-error setup-alert setup-alert-error" id="auth-error" hidden role="alert">
+                <svg class="alert-icon setup-alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 8v4M12 16h.01"/>
+                </svg>
+                <span class="alert-text setup-alert-text"></span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 2: Repository Setup -->
+          <section class="welcome-step setup-flow" id="step-repo" data-step="2" aria-labelledby="repo-title" hidden>
+            <div class="setup-header step-header">
+              <div class="setup-icon step-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                  <path d="M6 9l6 6 6-6"/>
+                  <path d="M12 3v18"/>
+                </svg>
+              </div>
+              <h1 id="repo-title" class="setup-title step-title">Set Up Repository</h1>
+              <p class="setup-subtitle step-description">
+                Choose to create a new private repository or link an existing one for your solutions.
+              </p>
+            </div>
+
+            <div class="step-content">
+              <!-- Option Cards -->
+              <div class="option-cards stepper-radio-group" role="radiogroup" aria-label="Repository option" id="repo-options">
+                <label class="option-card stepper-radio-option" data-option="new">
+                  <input type="radio" name="repo-option" value="new" class="sr-only" />
+                  <div class="stepper-radio-custom" aria-hidden="true"></div>
+                  <div class="stepper-radio-label option-content">
+                    <span class="stepper-radio-title option-title">Create New Repository</span>
+                    <span class="stepper-radio-desc option-desc">Automatically creates a private repo named <code id="suggested-name">algosync-solutions</code></span>
+                  </div>
+                </label>
+
+                <label class="option-card stepper-radio-option" data-option="link">
+                  <input type="radio" name="repo-option" value="link" class="sr-only" />
+                  <div class="stepper-radio-custom" aria-hidden="true"></div>
+                  <div class="stepper-radio-label option-content">
+                    <span class="stepper-radio-title option-title">Link Existing Repository</span>
+                    <span class="stepper-radio-desc option-desc">Connect to a repository you already own</span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Repo Name Input -->
+              <div class="input-section stepper-input-group" id="name-section" hidden style="margin-top: var(--space-4);">
+                <label for="repo-name" class="form-label" style="font-size: var(--text-sm); font-weight: var(--font-weight-medium);">Repository Name</label>
+                <div class="input-group" style="display: flex; align-items: center;">
+                  <span class="input-prefix" id="name-prefix" style="color: var(--color-text-tertiary); font-family: var(--font-mono); font-size: var(--text-sm);"></span>
+                  <input
+                    type="text"
+                    id="repo-name"
+                    class="input stepper-input"
+                    placeholder="my-leetcode-solutions"
+                    autocomplete="off"
+                    aria-describedby="name-hint"
+                  />
+                </div>
+                <p class="input-hint stepper-input-hint" id="name-hint">Lowercase, hyphens and underscores allowed</p>
+                <p class="input-error stepper-input-error" id="name-error" hidden></p>
+              </div>
+
+              <div class="setup-actions step-actions">
+                <button
+                  class="btn btn-primary btn-lg setup-primary-btn w-full"
+                  id="continue-btn"
+                  type="button"
+                  disabled
+                >
+                  <span class="btn-text">Continue</span>
+                  <span class="btn-loading" hidden>
+                    <svg class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                      <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+                    </svg>
+                    <span>Setting up...</span>
+                  </span>
+                </button>
+              </div>
+
+              <div class="alert alert-error setup-alert setup-alert-error" id="repo-error" hidden role="alert" style="margin-top: var(--space-4);">
+                <svg class="alert-icon setup-alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 8v4M12 16h.01"/>
+                </svg>
+                <span class="alert-text setup-alert-text"></span>
+              </div>
+
+              <div class="alert alert-success setup-alert setup-alert-success" id="repo-success" hidden role="status" style="margin-top: var(--space-4);">
+                <svg class="alert-icon setup-alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <span class="alert-text setup-alert-text"></span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 3: Success -->
+          <section class="welcome-step success-step" id="step-success" data-step="3" aria-labelledby="success-title" hidden>
+            <div class="step-header">
+              <div class="success-icon step-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <h1 id="success-title" class="success-title step-title">You're All Set!</h1>
+              <p class="success-message step-description">
+                AlgoSync is now connected to your repository. Start solving problems on LeetCode!
+              </p>
+            </div>
+
+            <div class="step-content">
+              <div class="success-repo">
+                <span class="success-repo-label">Connected Repo:</span>
+                <span class="success-repo-name" id="success-repo"></span>
+              </div>
+
+              <div class="success-actions">
+                <a
+                  href="https://leetcode.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-primary btn-lg success-primary-btn w-full"
+                  id="open-leetcode"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" class="icon">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  Open LeetCode
+                </a>
+
+                <button
+                  class="btn btn-secondary success-secondary-btn w-full"
+                  id="open-popup"
+                  type="button"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Open AlgoSync Popup
+                </button>
+              </div>
+
+              <div class="success-tips">
+                <h3>What's Next?</h3>
+                <ul>
+                  <li>Go to <a href="https://leetcode.com" target="_blank" rel="noopener noreferrer">leetcode.com</a> and start solving</li>
+                  <li>Your solutions will appear in the repository after each accepted submission</li>
+                  <li>Click the AlgoSync extension icon to view your stats anytime</li>
+                  <li>Change upload mode in the popup: <code>Overwrite</code> or <code>Multi-Solution</code></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="welcome-footer" role="contentinfo">
+        <div class="social-links" aria-label="Social links">
+          <a
+            href="https://github.com/arunbhardwaj/LeetHub-2.0"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub Repository"
+            class="social-link"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+          <a
+            href="https://www.linkedin.com/in/bhardwaj-arun/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            class="social-link"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a
+            href="mailto:devkaisel@gmail.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Email"
+            class="social-link"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" width="20" height="20">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </a>
+        </div>
+        <p class="copyright">AlgoSync v<span id="extension-version">2.0.9</span></p>
+      </footer>
+    </div>
+
+    <script src="scripts/oauth2.js"></script>
+    <script type="module" src="scripts/welcome.js"></script>
+  </body>
+</html>
