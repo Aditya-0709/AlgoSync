@@ -66,16 +66,16 @@ Download the latest release from GitHub:
 
 # 📸 Screenshots
 
-> Add screenshots here.
+## Extension Popup
 
-```
-assets/screenshots/
+![Extension Popup](assets/screenshots/popup.png)
 
-popup.png
-repository.png
-leetcode.png
-gfg.png
-```
+---
+
+## GitHub Repository
+
+![Repository](assets/screenshots/repository.png)
+
 
 ---
 
