@@ -41,7 +41,7 @@ export function About() {
 
         <div className="space-y-2 pt-1">
           <a
-            href="https://github.com/arunbhardwaj/LeetHub-2.0"
+            href="https://github.com/Aditya-0709/AlgoSync"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between p-2 rounded border border-border bg-background hover:border-text-muted transition-colors duration-150 group"
@@ -50,14 +50,14 @@ export function About() {
               <Github className="w-4 h-4 text-text-secondary group-hover:text-text-primary transition-colors" />
               <div>
                 <span className="text-xs font-medium text-text-primary block">GitHub Repository</span>
-                <span className="text-[10px] text-text-secondary block">arunbhardwaj/LeetHub-2.0</span>
+                <span className="text-[10px] text-text-secondary block">Aditya-0709/AlgoSync</span>
               </div>
             </div>
             <ExternalLink className="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" />
           </a>
 
           <a
-            href="https://github.com/arunbhardwaj/LeetHub-2.0/issues"
+            href="https://github.com/Aditya-0709/AlgoSync/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between p-2 rounded border border-border bg-background hover:border-text-muted transition-colors duration-150 group"
@@ -81,7 +81,7 @@ export function About() {
             <ShieldCheck className="w-3.5 h-3.5 text-success" /> MIT License
           </span>
           <span className="flex items-center gap-1">
-            Built with <Heart className="w-3 h-3 text-danger fill-danger" /> by Arun Bhardwaj
+            Built with <Heart className="w-3 h-3 text-danger fill-danger" /> by Aditya Garg
           </span>
         </div>
       </Card>

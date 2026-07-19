@@ -11,8 +11,8 @@ export const GITHUB_API = Object.freeze({
 export const GITHUB_OAUTH = Object.freeze({
   ACCESS_TOKEN_URL: 'https://github.com/login/oauth/access_token',
   AUTHORIZATION_URL: 'https://github.com/login/oauth/authorize',
-  CLIENT_ID: '0114dd35b156d4729fac',
-  CLIENT_SECRET: 'cfc3301d9745530bf1b31e92528ad9c31fd3f995',
+  CLIENT_ID: 'Ov23liBUFoMra3nbAvOJ',
+  CLIENT_SECRET: '821eb0ae447fc0956cffabe31acbc46102027477',
   REDIRECT_URL: 'https://github.com/',
   SCOPES: ['repo'],
 });

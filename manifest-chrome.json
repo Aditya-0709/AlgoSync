@@ -2,9 +2,9 @@
   "manifest_version": 3,
   "name": "AlgoSync",
   "description": "Automatically integrate your LeetCode & multi-platform coding submissions to GitHub",
-  "homepage_url": "https://github.com/arunbhardwaj/LeetHub-2.0",
+  "homepage_url": "https://github.com/Aditya-0709/AlgoSync",
   "version": "__LH_VERSION__",
-  "author": "Arun Bhardwaj",
+  "author": "Aditya Garg",
   "action": {
     "default_icon": "assets/thumbnail.png",
     "default_popup": "popup.html",

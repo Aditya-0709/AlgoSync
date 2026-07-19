@@ -18,7 +18,7 @@ const updateStatsMsg = 'Updated stats';
 const discussionMsg = 'Prepend discussion post - AlgoSync';
 const createNotesMsg = 'Attach NOTES - AlgoSync';
 const defaultRepoReadme =
-  'A collection of LeetCode questions to ace the coding interview! - Created using [AlgoSync](https://github.com/arunbhardwaj/LeetHub-2.0)';
+  'A collection of LeetCode questions to ace the coding interview! - Created using [AlgoSync](https://github.com/Aditya-0709/AlgoSync)';
 const readmeFilename = 'README.md';
 const statsFilename = 'stats.json';
 

@@ -19,7 +19,7 @@ async function createRepository(token, name) {
       private: true,
       auto_init: true,
       description:
-        'A collection of LeetCode questions to ace the coding interview! - Created using [AlgoSync](https://github.com/arunbhardwaj/LeetHub-2.0)',
+        'A collection of LeetCode questions to ace the coding interview! - Created using [AlgoSync](https://github.com/Aditya-0709/AlgoSync)',
     }),
   });
 
