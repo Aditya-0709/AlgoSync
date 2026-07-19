@@ -4,9 +4,6 @@ const getBrowser = () => {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     return chrome;
   }
-  if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
-    return browser;
-  }
   return null;
 };
 

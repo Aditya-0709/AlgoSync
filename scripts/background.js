@@ -1,6 +1,6 @@
 import { storageService } from './services/storageService.js';
 
-let api = isChrome() ? chrome : isFirefox() ? browser : undefined;
+let api = typeof chrome !== 'undefined' ? chrome : undefined;
 
 // const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -75,10 +75,3 @@ function handleMessage(request, sender, sendResponse) {
   return true;
 }
 
-function isChrome() {
-  return typeof chrome !== 'undefined' && typeof chrome.runtime !== 'undefined';
-}
-
-function isFirefox() {
-  return typeof browser !== 'undefined' && typeof browser.runtime !== 'undefined';
-}

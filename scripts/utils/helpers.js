@@ -111,8 +111,6 @@ export function assert(truthy, msg) {
 export function getBrowser() {
   if (typeof chrome !== 'undefined' && typeof chrome.runtime !== 'undefined') {
     return chrome;
-  } else if (typeof browser !== 'undefined' && typeof browser.runtime !== 'undefined') {
-    return browser;
   } else if (
     (typeof process !== 'undefined' && process.release && process.release.name === 'node') ||
     typeof jasmine !== 'undefined'

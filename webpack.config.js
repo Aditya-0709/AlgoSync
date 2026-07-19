@@ -40,7 +40,6 @@ const ignore = [
   '**/scripts/welcome.js',
   '**/scripts/popup.js',
   '**/manifest-chrome.json',
-  '**/manifest-firefox.json',
   '**/src/**',
   '**/postcss.config.cjs',
   '**/tailwind.config.cjs',
@@ -48,7 +47,6 @@ const ignore = [
 
 const folderIgnore = [
   '**/chrome/**',
-  '**/firefox/**',
   '**/manifest.json',
 ];
 
@@ -136,11 +134,6 @@ export default {
           transform: manifestTransform,
         },
         {
-          from: './manifest-firefox.json',
-          to: './firefox/manifest.json',
-          transform: manifestTransform,
-        },
-        {
           from: 'assets/**',
           globOptions: {
             ignore: [
@@ -179,17 +172,10 @@ export default {
               destination: './dist/scripts/popup.js',
             },
           ],
-          copy: [ // Copy everything to chrome and firefox
+          copy: [ // Copy everything to chrome
             {
               source: './dist/**',
               destination: './dist/chrome',
-              globOptions: {
-                ignore: folderIgnore,
-              },
-            },
-            {
-              source: './dist/**',
-              destination: './dist/firefox',
               globOptions: {
                 ignore: folderIgnore,
               },

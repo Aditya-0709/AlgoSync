@@ -12,7 +12,7 @@ A modern browser extension built for developers who want an organized coding por
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/Platforms-LeetCode%20%7C%20GeeksForGeeks-orange)
-![Browser](https://img.shields.io/badge/Browser-Chrome%20%7C%20Firefox-success)
+![Browser](https://img.shields.io/badge/Browser-Chrome%20%7C%20Brave%20%7C%20Edge%20%7C%20Opera-success)
 ![JavaScript](https://img.shields.io/badge/Built%20With-JavaScript-yellow)
 
 </div>
@@ -37,7 +37,7 @@ A modern browser extension built for developers who want an organized coding por
 - ⚡ Fast GitHub synchronization
 - 🔒 GitHub OAuth authentication
 - 🧩 Modular architecture
-- 🌐 Chrome & Firefox support
+- 🌐 Chromium-based browser support (Chrome, Brave, Edge, Opera, Arc)
 
 ---
 
@@ -131,28 +131,6 @@ dist/chrome
 ```
 
 Done 🎉
-
----
-
-# 🦊 Firefox
-
-Build
-
-```bash
-npm run build
-```
-
-Open
-
-```
-about:debugging
-```
-
-Load
-
-```
-dist/firefox
-```
 
 ---
 
