@@ -88,6 +88,9 @@ const Theme = {
   }
 };
 
+// Apply theme immediately when module loads to prevent flash of unstyled content
+Theme.init();
+
 // ============================================================================
 // STORAGE HELPERS (Delegated to StorageService)
 // ============================================================================

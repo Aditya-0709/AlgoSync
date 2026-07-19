@@ -6,19 +6,6 @@
     <title>AlgoSync - Welcome</title>
     <link rel="stylesheet" href="css/design-system.css" />
     <link rel="stylesheet" href="css/welcome.css" />
-    <script>
-      (function() {
-        try {
-          var theme = localStorage.getItem('algosync-theme') || 'system';
-          if (theme === 'system') {
-            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          }
-          document.documentElement.setAttribute('data-theme', theme);
-        } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'light');
-        }
-      })();
-    </script>
   </head>
   <body>
     <div class="welcome-container">
