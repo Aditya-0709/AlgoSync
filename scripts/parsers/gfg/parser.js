@@ -184,29 +184,33 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
   if (!doc) return [{ name: 'General' }];
   try {
     const tags = [];
-    const addTag = (text, el = null) => {
+    const addTag = (text, el = null, isExplicitTopicContainer = false) => {
       if (!text) return;
-      const cleaned = text.trim();
+      const cleaned = typeof text === 'string' ? text.trim() : String(text).trim();
       if (
         cleaned &&
         cleaned.length > 1 &&
         cleaned.length < 35 &&
         !cleaned.includes('\n') &&
         !cleaned.includes('\r') &&
-        !['topic tags', 'topic tag', 'company tags', 'company tag', 'tags', 'topics', 'show more', 'hide', 'general', 'practice', 'related articles', 'similar problems', 'companies'].includes(cleaned.toLowerCase()) &&
+        !['topic tags', 'topic tag', 'company tags', 'company tag', 'tags', 'topics', 'show more', 'hide', 'general', 'practice', 'related articles', 'similar problems', 'companies', 'easy', 'medium', 'hard', 'basic', 'school'].includes(cleaned.toLowerCase()) &&
         !tags.some(t => t.name.toLowerCase() === cleaned.toLowerCase())
       ) {
-        if (el && doc.body) {
+        if (!isExplicitTopicContainer && el && doc.body) {
           let cur = el;
           let hops = 0;
-          while (cur && cur !== doc.body && hops < 6) {
+          let isInsideTopicContainer = false;
+          while (cur && cur !== doc.body && hops < 8) {
             const cls = cur.className?.toString().toLowerCase() || '';
             const id = cur.id?.toString().toLowerCase() || '';
-            if (cls.includes('company') || id.includes('company') || cls.includes('article') || cls.includes('related') || cls.includes('similar')) {
+            if (cls.includes('topic') || id.includes('topic')) {
+              isInsideTopicContainer = true;
+            }
+            if (!isInsideTopicContainer && (cls.includes('company') || id.includes('company') || cls.includes('article') || cls.includes('related') || cls.includes('similar'))) {
               return;
             }
             const prevTxt = cur.previousElementSibling?.innerText?.trim()?.toLowerCase() || '';
-            if (prevTxt.includes('company') || prevTxt.includes('related article') || prevTxt.includes('similar problem')) {
+            if (!isInsideTopicContainer && (prevTxt.includes('company') || prevTxt.includes('related article') || prevTxt.includes('similar problem'))) {
               return;
             }
             cur = cur.parentElement;
@@ -217,6 +221,7 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
       }
     };
 
+    // 1. Try __NEXT_DATA__ extraction with expanded keys and object support
     try {
       const nextDataEl = doc.getElementById('__NEXT_DATA__');
       if (nextDataEl) {
@@ -230,7 +235,7 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
             const queries = pageProps?.initialState?.problemApi?.queries;
             if (queries && typeof queries === 'object') {
               for (const [, queryVal] of Object.entries(queries)) {
-                const qt = queryVal?.data?.tags?.topic_tags;
+                const qt = queryVal?.data?.tags?.topic_tags || queryVal?.data?.topic_tags || queryVal?.data?.topics;
                 if (qt && Array.isArray(qt) && qt.length > 0) {
                   topicTags = qt;
                   break;
@@ -246,15 +251,21 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
                 for (const item of obj) deepSearch(item, depth + 1);
               } else if (typeof obj === 'object') {
                 for (const [k, v] of Object.entries(obj)) {
-                  if (k === 'topic_tags' && Array.isArray(v) && v.length > 0) {
-                    topicTags = v;
-                    return;
-                  }
-                  if (k === 'topicTags' && Array.isArray(v) && v.length > 0) {
-                    topicTags = v;
-                    return;
-                  }
                   const lk = k.toLowerCase();
+                  if (['topic_tags', 'topictags', 'topic_tag', 'topics', 'problemtags', 'problem_tags'].includes(lk) && Array.isArray(v) && v.length > 0) {
+                    const validItems = v.filter(item => {
+                      if (typeof item === 'string') return item && !item.toLowerCase().includes('company');
+                      if (item && typeof item === 'object') {
+                        const t = item.name || item.tag || item.text || item.label || item.title || item.slug || '';
+                        return t && typeof t === 'string' && !t.toLowerCase().includes('company');
+                      }
+                      return false;
+                    });
+                    if (validItems.length > 0) {
+                      topicTags = validItems;
+                      return;
+                    }
+                  }
                   if (!['companytags', 'company_tags', 'companies', 'relatedarticles', 'similarproblems', 'articles'].includes(lk)) {
                     deepSearch(v, depth + 1);
                   }
@@ -266,9 +277,11 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
 
           if (topicTags && Array.isArray(topicTags) && topicTags.length > 0) {
             for (const tag of topicTags) {
-              if (typeof tag === 'string') addTag(tag);
-              else if (tag && typeof tag === 'object' && tag.name) addTag(tag.name);
-              else if (tag && typeof tag === 'object' && tag.tag) addTag(tag.tag);
+              if (typeof tag === 'string') addTag(tag, null, true);
+              else if (tag && typeof tag === 'object') {
+                const name = tag.name || tag.tag || tag.text || tag.label || tag.title || tag.slug || tag.value;
+                if (name) addTag(name, null, true);
+              }
             }
             if (tags.length > 0) return tags;
           }
@@ -276,21 +289,19 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
       }
     } catch (_nextDataErr) {}
 
+    // 2. Expand Topic Tags dropdown if collapsed
     try {
-      const allStrongs = doc.querySelectorAll('strong, b, span, div, p, h3, h4, h5');
+      const allStrongs = doc.querySelectorAll('strong, b, span, div, p, h3, h4, h5, button');
       for (const el of allStrongs) {
         const txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-        if (txt === 'topic tags' || txt === 'topic tag') {
+        if (txt === 'topic tags' || txt === 'topic tag' || txt === 'topics') {
           const parent = el.parentElement;
           if (parent) {
             const dropdownBtn = parent.querySelector('button[class*="tag_dropdown"], button[class*="dropdown"]') ||
-                                parent.querySelector('button');
+                                parent.querySelector('button') || (el.tagName === 'BUTTON' ? el : null);
             if (dropdownBtn) {
-              const existingTags = parent.querySelectorAll('a[class*="tag_label"], a[href*="/explore?category"]');
-              if (existingTags.length === 0) {
-                dropdownBtn.click();
-                await new Promise(r => setTimeout(r, 300));
-              }
+              dropdownBtn.click();
+              await new Promise(r => setTimeout(r, 400));
             }
           }
           break;
@@ -298,107 +309,83 @@ export async function findTopicTags(doc = typeof document !== 'undefined' ? docu
       }
     } catch (_expandErr) {}
 
-    const gfgSpecificSelectors = [
-      'a[class*="problems_tag_label"]',
-      'a[class*="tag_label"][href*="/explore?category"]',
-      'a[href*="/explore?category[]="]',
-      'a[href*="/explore?category%5B%5D="]',
+    // 3. Explicit Topic Selectors (Trusted completely without company checks)
+    const explicitTopicSelectors = [
+      'a[href*="/problems?topicTags="]',
+      'a[href*="/problems?topics="]',
+      'a[href*="topicTags="]',
+      'a[href*="topics="]',
+      '[class*="topicTags"] a, [class*="topicTags"] span, [class*="topicTags"] div[class*="chip"]',
+      '[class*="topic-tags"] a, [class*="topic-tags"] span, [class*="topic-tags"] div[class*="chip"]',
+      '[class*="topicTag"] a, [class*="topicTag"] span, [class*="topicTag"] div[class*="chip"]',
+      '[class*="TopicTag"] a, [class*="TopicTag"] span, [class*="TopicTag"] div[class*="chip"]',
+      '[class*="explore_topicTag"] a, [class*="explore_topicTag"] span',
+      'a[class*="problems_tag_label"]'
     ];
-    for (const sel of gfgSpecificSelectors) {
+    for (const sel of explicitTopicSelectors) {
       doc.querySelectorAll(sel).forEach(el => {
-        let isCompany = false;
-        if (doc.body) {
-          let cur = el;
-          let hops = 0;
-          while (cur && cur !== doc.body && hops < 8) {
-            const prevSibling = cur.previousElementSibling;
-            if (prevSibling) {
-              const prevText = (prevSibling.innerText || prevSibling.textContent || '').trim().toLowerCase();
-              if (prevText.includes('company')) {
-                isCompany = true;
-                break;
-              }
-            }
-            const parentText = cur.parentElement?.querySelector('strong, b')?.innerText?.trim()?.toLowerCase() || '';
-            if (parentText.includes('company')) {
-              isCompany = true;
-              break;
-            }
-            cur = cur.parentElement;
-            hops++;
-          }
-        }
-        if (!isCompany) {
-          addTag(el.innerText, el);
+        const href = el.getAttribute?.('href') || '';
+        if (!href.includes('company=') && !href.includes('company_tag')) {
+          addTag(el.innerText, el, true);
         }
       });
     }
+    if (tags.length > 0) return tags;
 
-    if (tags.length === 0) {
-      const allHeadings = doc.querySelectorAll('h2, h3, h4, h5, div, span, button, p, strong');
-      for (let h of allHeadings) {
-        const txt = h.innerText?.trim()?.toLowerCase() || '';
-        if (
-          (txt.startsWith('topic tag') || txt.startsWith('topics') || txt === 'topic tags' || txt.includes('topic tags')) &&
-          !txt.includes('company') &&
-          !txt.includes('related') &&
-          !txt.includes('article') &&
-          !txt.includes('similar')
-        ) {
-          const containers = [
-            h.nextElementSibling,
-            h.parentElement?.nextElementSibling,
-            h.parentElement,
-            h.closest('[class*="accordion"]')
-          ];
-          for (const container of containers) {
-            if (container) {
-              const items = container.querySelectorAll('a, span, div[class*="chip"], button, li');
-              items.forEach(item => {
-                if (item !== h && !h.contains(item)) {
-                  addTag(item.innerText, item);
+    // 4. Search around Topic Tags headings
+    const allHeadings = doc.querySelectorAll('h2, h3, h4, h5, div, span, button, p, strong');
+    for (let h of allHeadings) {
+      const txt = h.innerText?.trim()?.toLowerCase() || '';
+      if (
+        (txt.startsWith('topic tag') || txt.startsWith('topics') || txt === 'topic tags' || txt.includes('topic tags')) &&
+        !txt.includes('company') &&
+        !txt.includes('related') &&
+        !txt.includes('article') &&
+        !txt.includes('similar')
+      ) {
+        const containers = [
+          h.nextElementSibling,
+          h.parentElement?.nextElementSibling,
+          h.parentElement,
+          h.closest('[class*="accordion"]')
+        ];
+        for (const container of containers) {
+          if (container) {
+            const items = container.querySelectorAll('a, span, div[class*="chip"], button, li');
+            items.forEach(item => {
+              if (item !== h && !h.contains(item)) {
+                const href = item.getAttribute?.('href') || '';
+                if (!href.includes('company=') && !href.includes('company_tag')) {
+                  addTag(item.innerText, item, true);
                 }
-              });
-            }
+              }
+            });
           }
         }
       }
     }
+    if (tags.length > 0) return tags;
 
-    if (tags.length === 0) {
-      const explicitTopicSelectors = [
-        '[class*="topicTags"] a, [class*="topicTags"] span, [class*="topicTags"] div[class*="chip"]',
-        '[class*="topic-tags"] a, [class*="topic-tags"] span, [class*="topic-tags"] div[class*="chip"]',
-        '[class*="topicTag"] a, [class*="topicTag"] span, [class*="topicTag"] div[class*="chip"]',
-        '[class*="TopicTag"] a, [class*="TopicTag"] span, [class*="TopicTag"] div[class*="chip"]',
-        '[class*="explore_topicTag"] a, [class*="explore_topicTag"] span',
-        'a[href*="/problems?topics="]'
-      ];
-      for (const sel of explicitTopicSelectors) {
-        doc.querySelectorAll(sel).forEach(el => addTag(el.innerText, el));
-      }
-    }
-
-    if (tags.length === 0) {
-      const genericSelectors = [
-        '[class*="tag_container"] a, [class*="tag_container"] span, [class*="tag_container"] div[class*="chip"]',
-        '[class*="tagContainer"] a, [class*="tagContainer"] span, [class*="tagContainer"] div[class*="chip"]',
-        '[class*="problem_tag"] a, [class*="problem_tag"] span, [class*="problem_tag"] div[class*="chip"]',
-        '[class*="problemTags"] a, [class*="problemTags"] span, [class*="problemTags"] div[class*="chip"]',
-        '[class*="accordion_tags"] a, [class*="accordion_tags"] span, [class*="accordion_tags"] div[class*="chip"]',
-        '[class*="problems_tag"] a, [class*="problems_tag"] span',
-        '[class*="pill_tag"] a, [class*="pill_tag"] span',
-        'a[href*="/problems?tag="]',
-        'a[href*="/problems?category="]'
-      ];
-      for (const sel of genericSelectors) {
-        doc.querySelectorAll(sel).forEach(el => {
-          const href = el.getAttribute?.('href') || '';
-          if (!href.includes('company=') && !href.includes('company_tag')) {
-            addTag(el.innerText, el);
-          }
-        });
-      }
+    // 5. Generic Tag Selectors with safe context checking
+    const genericSelectors = [
+      '[class*="tag_container"] a, [class*="tag_container"] span, [class*="tag_container"] div[class*="chip"]',
+      '[class*="tagContainer"] a, [class*="tagContainer"] span, [class*="tagContainer"] div[class*="chip"]',
+      '[class*="problem_tag"] a, [class*="problem_tag"] span, [class*="problem_tag"] div[class*="chip"]',
+      '[class*="problemTags"] a, [class*="problemTags"] span, [class*="problemTags"] div[class*="chip"]',
+      '[class*="accordion_tags"] a, [class*="accordion_tags"] span, [class*="accordion_tags"] div[class*="chip"]',
+      '[class*="problems_tag"] a, [class*="problems_tag"] span',
+      '[class*="pill_tag"] a, [class*="pill_tag"] span',
+      'a[href*="/problems?tag="]',
+      'a[href*="/problems?category="]',
+      'a[href*="/explore?category"]'
+    ];
+    for (const sel of genericSelectors) {
+      doc.querySelectorAll(sel).forEach(el => {
+        const href = el.getAttribute?.('href') || '';
+        if (!href.includes('company=') && !href.includes('company_tag')) {
+          addTag(el.innerText, el, false);
+        }
+      });
     }
 
     if (tags.length > 0) return tags;

@@ -262,6 +262,14 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
           const problemSlug = `${convertToSlug(title)}-gfg`;
           const fullProblemDirectory = getPlatformProblemDirectory(this.folder, problemSlug);
 
+          let topicTags = cachedTopicTags;
+          if (!topicTags || topicTags.length === 0 || (topicTags.length === 1 && topicTags[0]?.name === 'General')) {
+            const freshTags = await this.findTopicTags();
+            if (freshTags && freshTags.length > 0 && !(freshTags.length === 1 && freshTags[0]?.name === 'General')) {
+              topicTags = freshTags;
+            }
+          }
+
           const result = await syncService.syncSubmission({
             problemStatement,
             problemSlug,
@@ -269,7 +277,7 @@ export class GeeksForGeeksPlatform extends CodingPlatform {
             fullProblemDirectory,
             language,
             code,
-            topicTags: cachedTopicTags,
+            topicTags,
             problemTitle: title,
             difficulty,
             platformFolder: this.folder,
